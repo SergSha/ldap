@@ -1,0 +1,12 @@
+---
+# tasks file for ldap
+
+- name: Set FQDN hostname
+  hostname: 
+    name: '{{ ipaclient_fqdn }}'
+
+- name: Install ipa packages
+  yum: 
+   name:
+    - ipa-client
+   state: present
