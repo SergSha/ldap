@@ -105,14 +105,14 @@ VM, run `vagrant status NAME`.
 <b>ipaserver.sergsha.local</b>
 [root@ipaserver ~]#</pre>
 
-<p>Запустим firewall:</p>
+<p>Запустим firewalld:</p>
 
 <pre>[root@ipaserver ~]# systemctl enable firewalld --now
 Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service to /usr/lib/systemd/system/firewalld.service.
 Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.
 [root@ipaserver ~]#</pre>
 
-<p>В firewall откроем порты, необходимые для работы FreeIPA:</p>
+<p>В firewalld откроем порты, необходимые для работы FreeIPA:</p>
 
 <pre>[root@ipaserver ~]# firewall-cmd --permanent --add-port=53/{tcp,udp} --add-port={80,443}/tcp --add-port={88,464}/{tcp,udp} --add-port=123/udp --add-port={389,636}/tcp
 success
@@ -125,7 +125,7 @@ success
 123 — синхронизация времени;<br />
 389 и 636 — ldap и ldaps соответственно.</p>
 
-<p>Перечитаем обновленную конфигурацию firewall:</p>
+<p>Перечитаем обновленную конфигурацию firewalld:</p>
 
 <pre>[root@ipaserver ~]# firewall-cmd --reload
 success

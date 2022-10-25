@@ -1,0 +1,15 @@
+---
+# tasks file for ldap
+
+- name: Set FQDN hostname
+  hostname: 
+    name: '{{ ipaserver_fqdn }}'
+
+- name: Install ipa packages
+  yum: 
+   name:
+    - nss
+    - ipa-server
+    - ipa-server-dns
+    - bind-dyndb-ldap
+   state: latest

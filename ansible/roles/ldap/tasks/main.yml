@@ -1,2 +1,16 @@
 ---
 # tasks file for ldap
+
+- name: Start and enable firewalld
+  service:
+    name: firewalld
+    state: restarted
+    enabled: true
+
+- name: Include ipaserver tasks
+  include_tasks: ipaserver.yml
+  when: '"ipaserver" in ansible_hostname'
+
+- name: Include ipaclient tasks
+  include_tasks: ipaclient.yml
+  when: '"ipaclient" in ansible_hostname'
