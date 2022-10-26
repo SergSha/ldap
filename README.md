@@ -140,9 +140,9 @@ Permissive
 [root@ipaserver ~]#</pre>
 
 
-<p>Установим FreeIPA:</p>
+<p>Установим необходимые пакеты для FreeIPA:</p>
 
-<pre>[root@ipaserver ~]# yum install ipa-server -y</pre>
+<pre>[root@ipaserver ~]# yum install nss, ipa-server{,-dns} bind-dyndb-ldap -y</pre>
 
 <p>Наш сервер будет использоваться ещё и как DNS:</p>
 
@@ -234,7 +234,7 @@ Continue to configure the system with these values? [no]: yes
 ipapython.admintool: ERROR    The ipa-server-install command failed. See /var/log/ipaserver-install.log for more information
 [root@ipaserver ~]#</pre>
 
-
+<pre>ipa-server-install -U --realm SERGSHA.LOCAL --domain sergsha.local --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --setup-dns --auto-forwarders --no-reverse --mkhomedir -a Otus1234 -p Otus1234</pre>
 
 
 
