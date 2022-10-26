@@ -105,31 +105,7 @@ VM, run `vagrant status NAME`.
 <b>ipaserver.sergsha.local</b>
 [root@ipaserver ~]#</pre>
 
-<p>Запустим firewalld:</p>
 
-<pre>[root@ipaserver ~]# systemctl enable firewalld --now
-Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service to /usr/lib/systemd/system/firewalld.service.
-Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.
-[root@ipaserver ~]#</pre>
-
-<p>В firewalld откроем порты, необходимые для работы FreeIPA:</p>
-
-<pre>[root@ipaserver ~]# firewall-cmd --permanent --add-port=53/{tcp,udp} --add-port={80,443}/tcp --add-port={88,464}/{tcp,udp} --add-port=123/udp --add-port={389,636}/tcp
-success
-[root@ipaserver ~]#</pre>
-
-<p>где<br />
-- 53 — запросы DNS, если мы планируем использовать наш сервер в качестве сервера DNS;<br />
-80 и 443 — http и https соответственно для доступа к веб-интерфейсу управления;<br />
-88 и 464 — kerberos и kpasswd соответственно;<br />
-123 — синхронизация времени;<br />
-389 и 636 — ldap и ldaps соответственно.</p>
-
-<p>Перечитаем обновленную конфигурацию firewalld:</p>
-
-<pre>[root@ipaserver ~]# firewall-cmd --reload
-success
-[root@ipaserver ~]#</pre>
 
 <p>Отключим SELinux:</p>
 
@@ -140,13 +116,9 @@ Permissive
 [root@ipaserver ~]#</pre>
 
 
-<p>Установим необходимые пакеты для FreeIPA:</p>
+<p>Установим необходимые пакеты для IPA сервера:</p>
 
-<pre>[root@ipaserver ~]# yum install nss, ipa-server{,-dns} bind-dyndb-ldap -y</pre>
-
-<p>Наш сервер будет использоваться ещё и как DNS:</p>
-
-<pre>[root@ipaserver ~]# yum install ipa-server-dns -y</pre>
+<pre>[root@ipaserver ~]# yum install nss ipa-server ipa-server-dns bind-dyndb-ldap -y</pre>
 
 <p>Выполним конфигурирование сервера:</p>
 
@@ -234,7 +206,7 @@ Continue to configure the system with these values? [no]: yes
 ipapython.admintool: ERROR    The ipa-server-install command failed. See /var/log/ipaserver-install.log for more information
 [root@ipaserver ~]#</pre>
 
-<pre>ipa-server-install -U --realm SERGSHA.LOCAL --domain sergsha.local --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --setup-dns --auto-forwarders --no-reverse --mkhomedir -a Otus1234 -p Otus1234</pre>
+<pre>ipa-server-install -U --realm SERGSHA.LOCAL --domain sergsha.local --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --setup-dns --auto-forwarders --no-reverse --mkhomedir --no-ntp -a Otus1234 -p Otus1234</pre>
 
 <pre>...
 The ipa-client-install command was successful
@@ -265,6 +237,86 @@ files is the Directory Manager password
 
 
 
+
+<pre>[root@ipaserver ~]# ipa-server-install
+
+The log file for this installation can be found in /var/log/ipaserver-install.log
+==============================================================================
+This program will set up the IPA Server.
+
+This includes:
+  * Configure a stand-alone CA (dogtag) for certificate management
+  * Configure the Network Time Daemon (ntpd)
+  * Create and configure an instance of Directory Server
+  * Create and configure a Kerberos Key Distribution Center (KDC)
+  * Configure Apache (httpd)
+  * Configure the KDC to enable PKINIT
+
+To accept the default shown in brackets, press the Enter key.
+
+WARNING: conflicting time&date synchronization service 'chronyd' will be disabled
+in favor of ntpd
+
+Do you want to configure integrated DNS (BIND)? [no]: yes
+
+Enter the fully qualified domain name of the computer
+on which you're setting up server software. Using the form
+<hostname>.<domainname>
+Example: master.example.com.
+
+
+Server host name [ipaserver.sergsha.local]: yes
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>Запустим firewalld:</p>
+
+<pre>[root@ipaserver ~]# systemctl enable firewalld --now
+Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service to /usr/lib/systemd/system/firewalld.service.
+Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.
+[root@ipaserver ~]#</pre>
+
+<p>В firewalld откроем порты, необходимые для работы FreeIPA:</p>
+
+<pre>[root@ipaserver ~]# firewall-cmd --permanent --add-port=53/{tcp,udp} --add-port={80,443}/tcp --add-port={88,464}/{tcp,udp} --add-port=123/udp --add-port={389,636}/tcp
+success
+[root@ipaserver ~]#</pre>
+
+<p>где<br />
+- 53 — запросы DNS, если мы планируем использовать наш сервер в качестве сервера DNS;<br />
+80 и 443 — http и https соответственно для доступа к веб-интерфейсу управления;<br />
+88 и 464 — kerberos и kpasswd соответственно;<br />
+123 — синхронизация времени;<br />
+389 и 636 — ldap и ldaps соответственно.</p>
+
+<p>Перечитаем обновленную конфигурацию firewalld:</p>
+
+<pre>[root@ipaserver ~]# firewall-cmd --reload
+success
+[root@ipaserver ~]#</pre>
 
 
 
