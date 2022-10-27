@@ -7,4 +7,4 @@ ipaserver_ip: 192.168.50.10
 ipaclient_ip: 192.168.50.11
 iparealm: SERGSHA.LOCAL
 ipadomain: sergsha.local
-ipauser_pub_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHnjhQ+M7O80/uh29sVAyHTp/ldL1WikH/tdlpQylYmYtFXOOps4zbY0WWxqBajg96mEAPLOjcV5cG8lHNjNNS2+N7
+#ipauser_pub_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHnjhQ+M7O80/uh29sVAyHTp/ldL1WikH/tdlpQylYmYtFXOOps4zbY0WWxqBajg96mEAPLOjcV5cG8lHNjNNS2+N7

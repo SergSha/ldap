@@ -105,24 +105,37 @@ VM, run `vagrant status NAME`.
 <b>ipaserver.sergsha.local</b>
 [root@ipaserver ~]#</pre>
 
+<p>Добавим строки в файл /etc/hosts:</p>
 
+<pre>[root@ipaserver ~]# echo -e "192.168.50.10 ipaserver.sergsha.local ipaserver.sergsha.local\n192.168.50.11 ipaclient.sergsha.local ipaclient.sergsha.local" >> /etc/hosts
+[root@ipaserver ~]#</pre>
+
+<pre>[root@ipaserver ~]# less /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+127.0.1.1 ipaserver ipaserver
+192.168.50.10 ipaserver.sergsha.local ipaserver.sergsha.local
+192.168.50.11 ipaclient.sergsha.local ipaclient.sergsha.local</pre>
 
 <p>Отключим SELinux:</p>
 
 <pre>[root@ipaserver ~]# setenforce 0
-[root@ipaserver ~]# sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config
+[root@ipaserver ~]# sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
 [root@ipaserver ~]# getenforce
 Permissive
 [root@ipaserver ~]#</pre>
 
-
 <p>Установим необходимые пакеты для IPA сервера:</p>
 
-<pre>[root@ipaserver ~]# yum install nss ipa-server ipa-server-dns bind-dyndb-ldap -y</pre>
+<pre>[root@ipaserver ~]# yum update nss -y</pre>
+
+<pre>[root@ipaserver ~]# yum install ipa-server ipa-server-dns -y</pre>
+
+<pre>[root@ipaserver ~]# yum install bind-dyndb-ldap -y</pre>
 
 <p>Выполним конфигурирование сервера:</p>
 
-<pre>[root@ipaserver ~]# ipa-server-install
+<pre>[root@ipaserver ~]# ipa-server-install --no-ntp
 
 The log file for this installation can be found in /var/log/ipaserver-install.log
 ==============================================================================
@@ -130,16 +143,15 @@ This program will set up the IPA Server.
 
 This includes:
   * Configure a stand-alone CA (dogtag) for certificate management
-  * Configure the Network Time Daemon (ntpd)
   * Create and configure an instance of Directory Server
   * Create and configure a Kerberos Key Distribution Center (KDC)
   * Configure Apache (httpd)
   * Configure the KDC to enable PKINIT
 
-To accept the default shown in brackets, press the Enter key.
+Excluded by options:
+  * Configure the Network Time Daemon (ntpd)
 
-WARNING: conflicting time&date synchronization service 'chronyd' will be disabled
-in favor of ntpd
+To accept the default shown in brackets, press the Enter key.
 
 Do you want to configure integrated DNS (BIND)? [no]: yes
 
@@ -149,62 +161,86 @@ on which you're setting up server software. Using the form
 Example: master.example.com.
 
 
-Server host name [ipaserver.sergsha.local]:
+Server host name [ipaserver.sergsha.local]: 
 
 Warning: skipping DNS resolution of host ipaserver.sergsha.local
 The domain name has been determined based on the host name.
 
-Please confirm the domain name [sergsha.local]:
+Please confirm the domain name [sergsha.local]: 
 
 The kerberos protocol requires a Realm name to be defined.
 This is typically the domain name converted to uppercase.
 
-Please provide a realm name [SERGSHA.LOCAL]:
+Please provide a realm name [SERGSHA.LOCAL]: 
 Certain directory server operations require an administrative user.
 This user is referred to as the Directory Manager and has full access
 to the Directory for system management tasks and will be added to the
 instance of directory server created for IPA.
 The password must be at least 8 characters long.
 
-Directory Manager password: 'Otus1234'
-Password (confirm):         'Otus1234'
+Directory Manager password: 
+Password (confirm): 
 
 The IPA server requires an administrative user, named 'admin'.
 This user is a regular system account used for IPA server administration.
 
-IPA admin password:         'Otus1234'
-Password (confirm):         'Otus1234'
+IPA admin password: 
+Password (confirm): 
 
 Checking DNS domain sergsha.local., please wait ...
-Do you want to configure DNS forwarders? [yes]:
+Do you want to configure DNS forwarders? [yes]: 
 Following DNS servers are configured in /etc/resolv.conf: 10.0.2.3
-Do you want to configure these servers as DNS forwarders? [yes]:
-All DNS servers from /etc/resolv.conf were added. You can enter additional addresses now:
-Enter an IP address for a DNS forwarder, or press Enter to skip:
-Checking DNS forwarders, please wait ...
-Do you want to search for missing reverse zones? [yes]:
-Do you want to create reverse zone for IP 10.0.2.15 [yes]: no
-Do you want to create reverse zone for IP 192.168.50.10 [yes]:
-Please specify the reverse zone name [50.168.192.in-addr.arpa.]:
+Do you want to configure these servers as DNS forwarders? [yes]: no
+Enter an IP address for a DNS forwarder, or press Enter to skip: 
+No DNS forwarders configured
+Do you want to search for missing reverse zones? [yes]: 
+Do you want to create reverse zone for IP 192.168.50.10 [yes]: 
+Please specify the reverse zone name [50.168.192.in-addr.arpa.]: 
 Using reverse zone(s) 50.168.192.in-addr.arpa.
 
 The IPA Master Server will be configured with:
 Hostname:       ipaserver.sergsha.local
-IP address(es): 10.0.2.15, 192.168.50.10
+IP address(es): 192.168.50.10
 Domain name:    sergsha.local
 Realm name:     SERGSHA.LOCAL
 
 BIND DNS server will be configured to serve IPA domain with:
-Forwarders:       10.0.2.3
+Forwarders:       No forwarders
 Forward policy:   only
 Reverse zone(s):  50.168.192.in-addr.arpa.
 
 Continue to configure the system with these values? [no]: yes
-...</pre>
 
-<pre>ipapython.admintool: ERROR    Installation aborted
-ipapython.admintool: ERROR    The ipa-server-install command failed. See /var/log/ipaserver-install.log for more information
+...
+...
+
+The ipa-client-install command was successful
+
+==============================================================================
+Setup complete
+
+Next steps:
+	1. You must make sure these network ports are open:
+		TCP Ports:
+		  * 80, 443: HTTP/HTTPS
+		  * 389, 636: LDAP/LDAPS
+		  * 88, 464: kerberos
+		  * 53: bind
+		UDP Ports:
+		  * 88, 464: kerberos
+		  * 53: bind
+
+	2. You can now obtain a kerberos ticket using the command: 'kinit admin'
+	   This ticket will allow you to use the IPA tools (e.g., ipa user-add)
+	   and the web user interface.
+	3. Kerberos requires time synchronization between clients
+	   and servers for correct operation. You should consider enabling ntpd.
+
+Be sure to back up the CA certificates stored in /root/cacert.p12
+These files are required to create replicas. The password for these
+files is the Directory Manager password
 [root@ipaserver ~]#</pre>
+
 
 <pre>ipa-server-install -U --realm SERGSHA.LOCAL --domain sergsha.local --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --setup-dns --auto-forwarders --no-reverse --mkhomedir --no-ntp -a Otus1234 -p Otus1234</pre>
 
@@ -238,7 +274,8 @@ files is the Directory Manager password
 
 
 
-<pre>[root@ipaserver ~]# ipa-server-install
+<pre>[root@ipaserver ~]# ipa-server-install --realm=SERGSHA.LOCAL --domain=sergsha.local --ds-password=Otus1234 --admin-password=Otus1234 --mkhomedir --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --no-ntp --unattended --setup-dns --auto-forwarders --auto-reverse
+Checking DNS domain sergsha.local, please wait ...
 
 The log file for this installation can be found in /var/log/ipaserver-install.log
 ==============================================================================
@@ -246,29 +283,63 @@ This program will set up the IPA Server.
 
 This includes:
   * Configure a stand-alone CA (dogtag) for certificate management
-  * Configure the Network Time Daemon (ntpd)
   * Create and configure an instance of Directory Server
   * Create and configure a Kerberos Key Distribution Center (KDC)
   * Configure Apache (httpd)
+  * Configure DNS (bind)
   * Configure the KDC to enable PKINIT
 
-To accept the default shown in brackets, press the Enter key.
+Excluded by options:
+  * Configure the Network Time Daemon (ntpd)
 
-WARNING: conflicting time&date synchronization service 'chronyd' will be disabled
-in favor of ntpd
+Warning: skipping DNS resolution of host ipaserver.sergsha.local
+Checking DNS domain sergsha.local., please wait ...
+Checking DNS forwarders, please wait ...
+DNS server 10.0.2.3: answer to query '. SOA' is missing DNSSEC signatures (no RRSIG data)
+Please fix forwarder configuration to enable DNSSEC support.
+(For BIND 9 add directive "dnssec-enable yes;" to "options {}")
+WARNING: DNSSEC validation will be disabled
+Using reverse zone(s) 50.168.192.in-addr.arpa.
 
-Do you want to configure integrated DNS (BIND)? [no]: yes
+The IPA Master Server will be configured with:
+Hostname:       ipaserver.sergsha.local
+IP address(es): 192.168.50.10
+Domain name:    sergsha.local
+Realm name:     SERGSHA.LOCAL
 
-Enter the fully qualified domain name of the computer
-on which you're setting up server software. Using the form
-<hostname>.<domainname>
-Example: master.example.com.
+BIND DNS server will be configured to serve IPA domain with:
+Forwarders:       10.0.2.3
+Forward policy:   only
+Reverse zone(s):  50.168.192.in-addr.arpa.
 
+...
 
-Server host name [ipaserver.sergsha.local]: yes
-</pre>
+The ipa-client-install command was successful
 
+==============================================================================
+Setup complete
 
+Next steps:
+	1. You must make sure these network ports are open:
+		TCP Ports:
+		  * 80, 443: HTTP/HTTPS
+		  * 389, 636: LDAP/LDAPS
+		  * 88, 464: kerberos
+		  * 53: bind
+		UDP Ports:
+		  * 88, 464: kerberos
+		  * 53: bind
+
+	2. You can now obtain a kerberos ticket using the command: 'kinit admin'
+	   This ticket will allow you to use the IPA tools (e.g., ipa user-add)
+	   and the web user interface.
+	3. Kerberos requires time synchronization between clients
+	   and servers for correct operation. You should consider enabling ntpd.
+
+Be sure to back up the CA certificates stored in /root/cacert.p12
+These files are required to create replicas. The password for these
+files is the Directory Manager password
+[root@ipaserver ~]#</pre>
 
 
 

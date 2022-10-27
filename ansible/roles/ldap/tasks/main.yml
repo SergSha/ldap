@@ -1,11 +1,19 @@
 ---
 # tasks file for ldap
 
-- name: Start and enable firewalld
-  service:
-    name: firewalld
-    state: restarted
-    enabled: true
+#- name: Start and enable firewalld
+#  service:
+#    name: firewalld
+#    state: restarted
+#    enabled: true
+
+- name: Add FQDN entries to /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+  loop:
+    - '{{ ipaserver_ip }} {{ ipaserver_fqdn }} {{ ipaserver_fqdn }}'
+    - '{{ ipaclient_ip }} {{ ipaclient_fqdn }} {{ ipaclient_fqdn }}'
 
 - name: Include ipaserver tasks
   include_tasks: ipaserver.yml

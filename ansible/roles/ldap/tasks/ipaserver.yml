@@ -13,3 +13,7 @@
     - ipa-server-dns
     - bind-dyndb-ldap
    state: latest
+
+- name: Install and configure IPA server
+  command: ipa-server-install --realm=SERGSHA.LOCAL --domain=sergsha.local --ds-password=Otus1234 --admin-password=Otus1234 --mkhomedir --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --no-ntp --unattended --setup-dns --auto-forwarders --auto-reverse
+
