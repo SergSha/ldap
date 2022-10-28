@@ -341,8 +341,30 @@ These files are required to create replicas. The password for these
 files is the Directory Manager password
 [root@ipaserver ~]#</pre>
 
+<pre>[root@ipaserver ~]# kinit admin
+Password for admin@SERGSHA.LOCAL:
+[root@ipaserver ~]#</pre>
 
+<pre>[root@ipaserver ~]# klist
+Ticket cache: KEYRING:persistent:0:0
+Default principal: admin@SERGSHA.LOCAL
 
+Valid starting       Expires              Service principal
+10/28/2022 06:26:07  10/29/2022 06:25:58  krbtgt/SERGSHA.LOCAL@SERGSHA.LOCAL
+[root@ipaserver ~]#</pre>
+
+<pre>[root@ipaserver ~]# ipactl status
+Directory Service: RUNNING
+krb5kdc Service: RUNNING
+kadmin Service: RUNNING
+named Service: RUNNING
+httpd Service: RUNNING
+ipa-custodia Service: RUNNING
+pki-tomcatd Service: RUNNING
+ipa-otpd Service: RUNNING
+ipa-dnskeysyncd Service: RUNNING
+ipa: INFO: The ipactl command was successful
+[root@ipaserver ~]#</pre>
 
 
 
