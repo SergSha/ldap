@@ -496,7 +496,7 @@ Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.servi
 Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.
 [root@ipaserver ~]#</pre>
 
-<p>Разрешим необходимые порты для работы сервиса IPA:</p>
+<p>В firewalld откроем порты, необходимые для работы FreeIPA:</p>
 
 <!-- <pre>firewall-cmd --permanent --add-service={http,https,ldap,ldaps,kerberos,bind,ntp} && firewall-cmd --reload</pre> -->
 
@@ -523,52 +523,259 @@ Oct 31 13:08:49 ipaserver.sergsha.local firewalld[9968]: WARNING: AllowZoneDrift
 Hint: Some lines were ellipsized, use -l to show in full.
 [root@ipaserver ~]#</pre>
 
+<p>В отдельном окне подключимся по ssh к серверу ipaclient и войдём под пользователем root:</p>
 
+<pre>[student@pv-homeworks1-10 ldap]$ vagrant ssh ipaclient
+Last login: Fri Oct 28 06:00:22 2022 from 192.168.50.1
+[vagrant@ipaclient ~]$ sudo -i
+[root@ipaclient ~]#</pre>
 
+[root@ipaclient ~]# hostname
+ipaclient
+[root@ipaclient ~]#
 
+<p>Для корректной работы сервера зададим ему полное доменное имя (FQDN):</p>
 
+<pre>[root@ipaserver ~]# hostnamectl set-hostname ipaclient.sergsha.local
+[root@ipaserver ~]#</pre>
 
+<pre>[root@ipaclient ~]# hostname
+<b>ipaclient.sergsha.local</b>
+[root@ipaclient ~]#</pre>
 
+<p>Установим нужный часовой пояс (в данном случае Europe/Moscow):</p>
 
+<pre>[root@ipaclient ~]# timedatectl set-timezone Europe/Moscow
+[root@ipaclient ~]#</pre>
 
+<pre>[root@ipaclient ~]# timedatectl status
+      Local time: Mon 2022-10-31 14:17:55 MSK
+  Universal time: Mon 2022-10-31 11:17:55 UTC
+        RTC time: Mon 2022-10-31 11:17:53
+       Time zone: Europe/Moscow (MSK, +0300)
+     NTP enabled: yes
+NTP synchronized: yes
+ RTC in local TZ: no
+      DST active: n/a
+[root@ipaclient ~]#</pre>
 
+<p>Так как DNS пока ещё не настроен, добавим строки в файл /etc/hosts:</p>
 
+<pre>[root@ipaclient ~]# echo -e "192.168.50.10 ipaserver.sergsha.local ipaserver.sergsha.local\n192.168.50.11 ipaclient.sergsha.local ipaclient.sergsha.local" >> /etc/hosts
+[root@ipaclient ~]#</pre>
 
+<pre>[root@ipaclient ~]# less /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+127.0.1.1 ipaclient ipaclient
+192.168.50.10 ipaserver.sergsha.local ipaserver.sergsha.local
+192.168.50.11 ipaclient.sergsha.local ipaclient.sergsha.local</pre>
 
+<p>Отключим SELinux:</p>
 
+<pre>[root@ipaclient ~]# setenforce 0
+[root@ipaclient ~]# sed -i 's/^SELINUX=.*/SELINUX=permissive/g' /etc/selinux/config
+[root@ipaclient ~]# getenforce
+Permissive
+[root@ipaclient ~]#</pre>
 
+<p>Firewalld пока отключен:</p>
 
+<pre>[root@ipaclient ~]# systemctl status firewalld
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+[root@ipaclient ~]#</pre>
 
+<p>Устанавливаем пакет для клиента FreeIPA:</p>
 
+<pre>[root@ipaclient ~]# yum install ipa-client -y</pre>
 
+<p>Присоединим нашего клиента к домену FreeIPA:</p>
 
+<pre>[root@ipaclient ~]# ipa-client-install --mkhomedir
+WARNING: ntpd time&date synchronization service will not be configured as
+conflicting service (chronyd) is enabled
+Use --force-ntpd option to disable it and force configuration of ntpd
 
-<p>Запустим firewalld:</p>
+DNS discovery failed to determine your DNS domain
+Provide the domain name of your IPA server (ex: example.com): sergsha.local
+Provide your IPA server name (ex: ipa.example.com): ipaserver.sergsha.local
+The failure to use DNS to find your IPA server indicates that your resolv.conf file is not properly configured.
+Autodiscovery of servers for failover cannot work with this configuration.
+If you proceed with the installation, services will be configured to always access the discovered server for all operations and will not fail over to other servers in case of failure.
+Proceed with fixed values and no DNS discovery? [no]: yes
+Client hostname: ipaclient.sergsha.local
+Realm: SERGSHA.LOCAL
+DNS Domain: sergsha.local
+IPA Server: ipaserver.sergsha.local
+BaseDN: dc=sergsha,dc=local
 
-<pre>[root@ipaserver ~]# systemctl enable firewalld --now
+Continue to configure the system with these values? [no]: yes
+Skipping synchronizing time with NTP server.
+User authorized to enroll computers: admin
+Password for admin@SERGSHA.LOCAL:
+Successfully retrieved CA cert
+    Subject:     CN=Certificate Authority,O=SERGSHA.LOCAL
+    Issuer:      CN=Certificate Authority,O=SERGSHA.LOCAL
+    Valid From:  2022-10-31 08:01:25
+    Valid Until: 2042-10-31 08:01:25
+
+Enrolled in IPA realm SERGSHA.LOCAL
+Created /etc/ipa/default.conf
+New SSSD config will be created
+Configured sudoers in /etc/nsswitch.conf
+Configured /etc/sssd/sssd.conf
+Configured /etc/krb5.conf for IPA realm SERGSHA.LOCAL
+trying https://ipaserver.sergsha.local/ipa/json
+[try 1]: Forwarding 'schema' to json server 'https://ipaserver.sergsha.local/ipa/json'
+trying https://ipaserver.sergsha.local/ipa/session/json
+[try 1]: Forwarding 'ping' to json server 'https://ipaserver.sergsha.local/ipa/session/json'
+[try 1]: Forwarding 'ca_is_enabled' to json server 'https://ipaserver.sergsha.local/ipa/session/json'
+Systemwide CA database updated.
+Hostname (ipaclient.sergsha.local) does not have A/AAAA record.
+Failed to update DNS records.
+Missing A/AAAA record(s) for host ipaclient.sergsha.local: 192.168.50.11.
+Missing reverse record(s) for address(es): 192.168.50.11.
+Adding SSH public key from /etc/ssh/ssh_host_rsa_key.pub
+Adding SSH public key from /etc/ssh/ssh_host_ecdsa_key.pub
+Adding SSH public key from /etc/ssh/ssh_host_ed25519_key.pub
+[try 1]: Forwarding 'host_mod' to json server 'https://ipaserver.sergsha.local/ipa/session/json'
+Could not update DNS SSHFP records.
+SSSD enabled
+Configured /etc/openldap/ldap.conf
+Configured /etc/ssh/ssh_config
+Configured /etc/ssh/sshd_config
+Configuring sergsha.local as NIS domain.
+Client configuration complete.
+The ipa-client-install command was successful
+[root@ipaclient ~]#</pre>
+
+<p>Включаем firewalld:</p>
+
+<pre>[root@ipaclient ~]# systemctl enable firewalld --now
 Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service to /usr/lib/systemd/system/firewalld.service.
 Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.
-[root@ipaserver ~]#</pre>
+[root@ipaclient ~]#</pre>
 
 <p>В firewalld откроем порты, необходимые для работы FreeIPA:</p>
 
-<pre>[root@ipaserver ~]# firewall-cmd --permanent --add-port=53/{tcp,udp} --add-port={80,443}/tcp --add-port={88,464}/{tcp,udp} --add-port=123/udp --add-port={389,636}/tcp
+<pre>[root@ipaclient ~]# firewall-cmd --permanent --add-port={80,443}/tcp --add-port={389,636}/tcp --add-port={88,464}/{tcp,udp} --add-port=53/{tcp,udp} --add-port=123/udp && firewall-cmd --reload
 success
+success
+[root@ipaclient ~]#</pre>
+
+<p>Проверим работу сервиса firewalld:</p>
+
+<pre>[root@ipaclient ~]# systemctl status firewalld
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2022-10-31 15:47:26 MSK; 8min ago
+     Docs: man:firewalld(1)
+ Main PID: 24403 (firewalld)
+   CGroup: /system.slice/firewalld.service
+           └─24403 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid
+
+Oct 31 15:47:25 ipaclient.sergsha.local systemd[1]: Starting firewalld - dyna...
+Oct 31 15:47:26 ipaclient.sergsha.local systemd[1]: Started firewalld - dynam...
+Oct 31 15:47:26 ipaclient.sergsha.local firewalld[24403]: WARNING: AllowZoneD...
+Hint: Some lines were ellipsized, use -l to show in full.
+[root@ipaclient ~]#</pre>
+
+<p>Попрбуем заполучить билет Kerberos для пользователя ipetrov:</p>
+
+<pre>[root@ipaclient ~]# kinit ipetrov
+Password for ipetrov@SERGSHA.LOCAL:
+[root@ipaclient ~]#</pre>
+
+<p>Проверяем, получилось ли у нас выписать билет Kerberos:</p>
+
+<pre>[root@ipaclient ~]# klist
+Ticket cache: KEYRING:persistent:0:0
+Default principal: ipetrov@SERGSHA.LOCAL
+
+Valid starting       Expires              Service principal
+10/31/2022 15:53:24  11/01/2022 15:53:14  krbtgt/SERGSHA.LOCAL@SERGSHA.LOCAL
+[root@ipaclient ~]#</pre>
+
+<p>Теперь попробуем зайти под пользователем ipetrov:</p>
+
+<pre>[root@ipaclient ~]# su - ipetrov
+Creating home directory for ipetrov.
+[ipetrov@ipaclient ~]$</pre>
+
+<p>Как видим, мы смогли зайти под пользователем ipetrov.</p>
+
+<p>Сгенерируем ssh-ключ для пользователя ipetrov:</p>
+
+<pre>[ipetrov@ipaclient ~]$ ssh-keygen -t rsa -b 4096 -f /home/ipetrov/.ssh/ipetrov
+Generating public/private rsa key pair.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/ipetrov/.ssh/ipetrov.
+Your public key has been saved in /home/ipetrov/.ssh/ipetrov.pub.
+The key fingerprint is:
+SHA256:v/dMqBPM2XVj/TlAw4hbIbJdJsphrJLPNPE87j38mVE ipetrov@ipaclient.sergsha.local
+The key's randomart image is:
++---[RSA 4096]----+
+|      .+ o.++    |
+|     .o.*.=o +   |
+|    . =+ .o . . .|
+|   o + + .   ..oo|
+|    = o So o Eo.+|
+|     o . .= o. o.|
+|      . o .o. . .|
+|       . +.o=o   |
+|          =* .o  |
++----[SHA256]-----+
+[ipetrov@ipaclient ~]$</pre>
+
+<p>Скопируем содержимое публичного ключа для передачи в настройки FreeIPA для пользователя ipetrov:</p>
+
+<pre>[ipetrov@ipaclient ~]$ less ./.ssh/ipetrov.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxqQNj4GMsD9ikb73ETn1jpw2bo2gK//lTwYLbBpTD9Rb9NAsgfUkaT0V88Y8vzW0lSJxR72wqTJHHC4SEcxN8Vepa8Ub9sbmQgZXSSSXRdWqBEpSnouA7kT7GHG/BQJntWpBcqID5Dm4m6OHqz9oH7S4g5XVwNxA4E0HZzVuHSx11CUvmv3XrTJkWomvAEZhsl2lmvTsEsESYQMGgbHSTbmhv9ct/C//3X1Lt0TORuJSXDjRtdSOs+WZp5vIXeTdOpVSr5aSX3waLWx1L/HfbeCOXPuFrRbxkuSJaB36X41g5h3fwjr0KAHra+/w36PKbehkJTBS9SfG+M5BxhokUvEatibXuiT8wkODW5gbwoEd22DnWXWF3calsbboPSGAXXXhS5dFNIo2LDl7bvycOZEKUDTRX0es/AP4XgbHbPkH3mDlKKwJN70toSD1E13lG9m1XI7nADvQ72xGKTZSO8MnlEAIN0HjbZg6hdSuNINh1pbAZv8LBm2DFfiyWNLoln/YeBuYzKzoZMyGOnfRg6uFZrFfYDbzwKpVQzaCBE5ZyEwgpTfkPcYuB6oiyvzlptEwHZqimVgX6FgP235Bp92M4vIkqYcxYKA0/sjrEYhzPifk0O1h6zrkBhnnwYJlh10TBUCHJGWfzx7NNwIzLAaDmC2wpamE7EU4s0xQ23w== ipetrov@ipaclient.sergsha.local</pre>
+
+<p>На сервере ipaserver запустим следующую команду:</p>
+
+<pre>[root@ipaserver ~]# ipa user-mod ipetrov --sshpubkey="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxqQNj4GMsD9ikb73ETn1jpw2bo2gK//lTwYLbBpTD9Rb9NAsgfUkaT0V88Y8vzW0lSJxR72wqTJHHC4SEcxN8Vepa8Ub9sbmQgZXSSSXRdWqBEpSnouA7kT7GHG/BQJntWpBcqID5Dm4m6OHqz9oH7S4g5XVwNxA4E0HZzVuHSx11CUvmv3XrTJkWomvAEZhsl2lmvTsEsESYQMGgbHSTbmhv9ct/C//3X1Lt0TORuJSXDjRtdSOs+WZp5vIXeTdOpVSr5aSX3waLWx1L/HfbeCOXPuFrRbxkuSJaB36X41g5h3fwjr0KAHra+/w36PKbehkJTBS9SfG+M5BxhokUvEatibXuiT8wkODW5gbwoEd22DnWXWF3calsbboPSGAXXXhS5dFNIo2LDl7bvycOZEKUDTRX0es/AP4XgbHbPkH3mDlKKwJN70toSD1E13lG9m1XI7nADvQ72xGKTZSO8MnlEAIN0HjbZg6hdSuNINh1pbAZv8LBm2DFfiyWNLoln/YeBuYzKzoZMyGOnfRg6uFZrFfYDbzwKpVQzaCBE5ZyEwgpTfkPcYuB6oiyvzlptEwHZqimVgX6FgP235Bp92M4vIkqYcxYKA0/sjrEYhzPifk0O1h6zrkBhnnwYJlh10TBUCHJGWfzx7NNwIzLAaDmC2wpamE7EU4s0xQ23w== ipetrov@ipaclient.sergsha.local"
+-----------------------
+Modified user "ipetrov"
+-----------------------
+  User login: ipetrov
+  First name: Ivan
+  Last name: Petrov
+  Home directory: /home/ipetrov
+  Login shell: /bin/bash
+  Principal name: ipetrov@SERGSHA.LOCAL
+  Principal alias: ipetrov@SERGSHA.LOCAL
+  Email address: ipetrov@email.ru
+  UID: 1192400001
+  GID: 1192400001
+  SSH public key: ssh-rsa
+                  AAAAB3NzaC1yc2EAAAADAQABAAACAQCxqQNj4GMsD9ikb73ETn1jpw2bo2gK//lTwYLbBpTD9Rb9NAsgfUkaT0V88Y8vzW0lSJxR72wqTJHHC4SEcxN8Vepa8Ub9sbmQgZXSSSXRdWqBEpSnouA7kT7GHG/BQJntWpBcqID5Dm4m6OHqz9oH7S4g5XVwNxA4E0HZzVuHSx11CUvmv3XrTJkWomvAEZhsl2lmvTsEsESYQMGgbHSTbmhv9ct/C//3X1Lt0TORuJSXDjRtdSOs+WZp5vIXeTdOpVSr5aSX3waLWx1L/HfbeCOXPuFrRbxkuSJaB36X41g5h3fwjr0KAHra+/w36PKbehkJTBS9SfG+M5BxhokUvEatibXuiT8wkODW5gbwoEd22DnWXWF3calsbboPSGAXXXhS5dFNIo2LDl7bvycOZEKUDTRX0es/AP4XgbHbPkH3mDlKKwJN70toSD1E13lG9m1XI7nADvQ72xGKTZSO8MnlEAIN0HjbZg6hdSuNINh1pbAZv8LBm2DFfiyWNLoln/YeBuYzKzoZMyGOnfRg6uFZrFfYDbzwKpVQzaCBE5ZyEwgpTfkPcYuB6oiyvzlptEwHZqimVgX6FgP235Bp92M4vIkqYcxYKA0/sjrEYhzPifk0O1h6zrkBhnnwYJlh10TBUCHJGWfzx7NNwIzLAaDmC2wpamE7EU4s0xQ23w==
+                  ipetrov@ipaclient.sergsha.local
+  SSH public key fingerprint: SHA256:v/dMqBPM2XVj/TlAw4hbIbJdJsphrJLPNPE87j38mVE
+                              ipetrov@ipaclient.sergsha.local (ssh-rsa)
+  Account disabled: False
+  Password: True
+  Member of groups: ipausers
+  Kerberos keys available: True
 [root@ipaserver ~]#</pre>
 
-<p>где<br />
-- 53 — запросы DNS, если мы планируем использовать наш сервер в качестве сервера DNS;<br />
-80 и 443 — http и https соответственно для доступа к веб-интерфейсу управления;<br />
-88 и 464 — kerberos и kpasswd соответственно;<br />
-123 — синхронизация времени;<br />
-389 и 636 — ldap и ldaps соответственно.</p>
+<p>Теперь под пользователем ipetrov с помощью ssh-ключа попытаемся зайти на сервер ipaserver:</p>
 
-<p>Перечитаем обновленную конфигурацию firewalld:</p>
+<pre>[ipetrov@ipaclient ~]$ ssh ipetrov@ipaserver.sergsha.local -i ./.ssh/ipetrov
+Last login: Mon Oct 31 15:22:06 2022 from 192.168.50.11
+-bash-4.2$</pre>
 
-<pre>[root@ipaserver ~]# firewall-cmd --reload
-success
-[root@ipaserver ~]#</pre>
+<p>Убедимся, что мы подключились к серверу ipaserver и под пользователем ipetrov:</p>
 
+<pre>-bash-4.2$ hostname
+ipaserver.sergsha.local
+-bash-4.2$ whoami
+ipetrov
+-bash-4.2$</pre>
 
 
 
