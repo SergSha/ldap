@@ -9,4 +9,4 @@
   yum: 
    name:
     - ipa-client
-   state: present
+   state: latest

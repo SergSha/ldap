@@ -5,6 +5,10 @@ ipaserver_fqdn: ipaserver.sergsha.local
 ipaclient_fqdn: ipaclient.sergsha.local
 ipaserver_ip: 192.168.50.10
 ipaclient_ip: 192.168.50.11
-iparealm: SERGSHA.LOCAL
 ipadomain: sergsha.local
+iparealm: SERGSHA.LOCAL
+ipareversezone: 50.168.192.in-addr.arpa.
+forwarders:
+- "8.8.8.8"
+- "8.8.4.4"
 #ipauser_pub_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHnjhQ+M7O80/uh29sVAyHTp/ldL1WikH/tdlpQylYmYtFXOOps4zbY0WWxqBajg96mEAPLOjcV5cG8lHNjNNS2+N7

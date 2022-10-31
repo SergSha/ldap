@@ -429,7 +429,7 @@ Added user "ipetrov"
 
 <p>Сгенерируем ssh-ключ для только что созданного пользователя ipetrov:</p>
 
-<pre>[root@ipaserver ~]# ssh-keygen -t rsa -b 4096 -f /home/ipetrov/.ssh/ipetrov          
+<pre>[root@ipaserver ~]# ssh-keygen -t rsa -b 4096 -f /home/ipetrov/.ssh/ipetrov
 Generating public/private rsa key pair.
 Enter passphrase (empty for no passphrase):
 Enter same passphrase again:

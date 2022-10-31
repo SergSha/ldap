@@ -4,11 +4,13 @@
 MACHINES = {
   :ipaserver => {
     :box_name => "centos/7",
+    :vm_name => "ipaserver",
     :ip => '192.168.50.10',
     :mem => '2048'
   },
   :ipaclient => {
     :box_name => "centos/7",
+    :vm_name => "ipaclient",
     :ip => '192.168.50.11',
     :mem => '1048'
   }

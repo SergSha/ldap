@@ -7,6 +7,26 @@
 #    state: restarted
 #    enabled: true
 
+- name: Set timezone to Europe/Moscow
+  timezone:
+    name: Europe/Moscow
+
+- name: Restarted chronyd
+  service:
+    name: chronyd
+    state: restarted
+
+#- name: Ensure SELinux is set to permissive mode
+#  lineinfile:
+#    path: /etc/selinux/config
+#    regexp: '^SELINUX='
+#    line: SELINUX=permissive
+
+#- name: Put SELinux in permissive mode, logging actions that would be blocked.
+#  selinux:
+#    policy: targeted
+#    state: permissive
+
 - name: Add FQDN entries to /etc/hosts
   lineinfile:
     path: /etc/hosts
@@ -22,3 +42,4 @@
 - name: Include ipaclient tasks
   include_tasks: ipaclient.yml
   when: '"ipaclient" in ansible_hostname'
+
