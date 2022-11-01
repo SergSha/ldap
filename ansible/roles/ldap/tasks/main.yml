@@ -1,12 +1,6 @@
 ---
 # tasks file for ldap
 
-#- name: Start and enable firewalld
-#  service:
-#    name: firewalld
-#    state: restarted
-#    enabled: true
-
 - name: Set timezone to Europe/Moscow
   timezone:
     name: Europe/Moscow
@@ -15,6 +9,15 @@
   service:
     name: chronyd
     state: restarted
+
+- name: Start and enable firewalld
+  service:
+    name: firewalld
+    state: restarted
+    enabled: true
+
+- name: Open ports in firewall for FreeIPA work
+  shell: firewall-cmd --permanent --add-port={80,443}/tcp --add-port={389,636}/tcp --add-port={88,464}/{tcp,udp} --add-port=53/{tcp,udp} --add-port=123/udp && firewall-cmd --reload
 
 #- name: Ensure SELinux is set to permissive mode
 #  lineinfile:

@@ -660,6 +660,6 @@ ipetrov
 
 <p>либо на клиентский сервер ipaclient:</p>
 
-<pre>$ ssh ipetrov@192.168.50.11 -i ./.ssh/ipetrov</pre>
+<pre>$ ssh ipetrov@192.168.50.11 -i ~/.ssh/ipetrov</pre>
 
 
