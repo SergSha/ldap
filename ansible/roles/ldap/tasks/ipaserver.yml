@@ -17,19 +17,27 @@
 - name: Install and configure ipa-server
   command: ipa-server-install --unattended --ip-address={{ ipaserver_ip }} --hostname={{ ipaserver_fqdn }} --domain={{ ipadomain }} --realm={{ iparealm }} --ds-password=Otus1234 --admin-password=Otus1234 --mkhomedir --setup-dns --forwarder={{ forwarders }} --reverse-zone={{ ipareversezone }} --no-ntp
 
-  - name: Copy new user public ssh key
-    copy:
-      src: "{{ newuser }}.pub"
-      dest: "~/.ssh/{{ newuser }}.pub"
+- name: Create directory ~/.ssh
+  file: 
+   path: ~/.ssh
+   state: directory
+
+- name: Copy new user public ssh key
+  copy:
+    src: "{{ newuser }}.pub"
+    dest: "~/.ssh/{{ newuser }}.pub"
 
 #- name: Get content of newuser public key
 #  debug:
 #    msg: "{{ lookup('file', '~/.ssh/{{ newuser }}.pub') }}"
 #    register: sshpubkey
 
-  - name: Fetch new user public ssh key
-    command: cat ~/.ssh/{{ newuser }}.pub
-    register: sshpubkey
+- name: Fetch new user public ssh key
+  command: cat ~/.ssh/{{ newuser }}.pub
+  register: sshpubkey
+
+- name: Kinit as admin
+  shell: echo "Otus1234" | kinit admin
 
 - name: Create new ipa user
   shell: echo "Otus1234" | ipa user-add {{ newuser }} --first=Ivan --last=Petrov --email={{ newuser }}@email.ru --shell=/bin/bash --sshpubkey="{{ sshpubkey.stdout }}" --password

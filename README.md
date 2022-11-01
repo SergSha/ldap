@@ -459,7 +459,7 @@ Hint: Some lines were ellipsized, use -l to show in full.
 
 <p>В отдельном окне подключимся по ssh к серверу ipaclient и войдём под пользователем root:</p>
 
-<pre>[student@pv-homeworks1-10 ldap]$ vagrant ssh ipaclient
+<pre>[user@localhost ldap]$ vagrant ssh ipaclient
 Last login: Fri Oct 28 06:00:22 2022 from 192.168.50.1
 [vagrant@ipaclient ~]$ sudo -i
 [root@ipaclient ~]#</pre>
