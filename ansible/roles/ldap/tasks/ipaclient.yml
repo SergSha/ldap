@@ -10,3 +10,6 @@
    name:
     - ipa-client
    state: latest
+
+- name: Install and configure ipa client
+  command: ipa-client-install --unattended --domain={{ ipadomain }} --server={{ ipaserver_fqdn }} --realm={{ iparealm }} --mkhomedir --hostname={{ ipaclient }} --no-ntp --ip-address={{ ipaclient_ip }} --principal admin --password=Otus1234

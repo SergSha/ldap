@@ -423,72 +423,6 @@ Added user "ipetrov"
   Kerberos keys available: True
 [root@ipaserver ~]#</pre>
 
-<p>Создадим директорий для хранения ssh-ключей пользователя ipetrov:</p>
-
-<pre>[root@ipaserver ~]# mkdir -p /home/ipetrov/.ssh</pre>
-
-<p>Сгенерируем ssh-ключ для только что созданного пользователя ipetrov:</p>
-
-<pre>[root@ipaserver ~]# ssh-keygen -t rsa -b 4096 -f /home/ipetrov/.ssh/ipetrov
-Generating public/private rsa key pair.
-Enter passphrase (empty for no passphrase):
-Enter same passphrase again:
-Your identification has been saved in /home/ipetrov/.ssh/ipetrov.
-Your public key has been saved in /home/ipetrov/.ssh/ipetrov.pub.
-The key fingerprint is:
-SHA256:kZ6av6ykcEebO+CcMnocQdZTz3xqQ/uZVnk/ajMj5Cs root@ipaserver.sergsha.local
-The key's randomart image is:
-+---[RSA 4096]----+
-|   . ..          |
-|  o o  + .       |
-| o   .  B .      |
-|  .    o *   .   |
-|   .  . S   o .  |
-|  . .. * o = . . |
-| ..+.oB   B    ..|
-|  =o++.+ E o =. .|
-|.o o. oo+...+.+  |
-+----[SHA256]-----+
-[root@ipaserver ~]#</pre>
-
-<p>Укажем публичный ssh-ключ для пользователе ipetrov в настройке IPA:</p>
-
-<pre>[root@ipaserver ~]# ipa user-mod ipetrov --sshpubkey="$(cat /home/ipetrov/.ssh/ipetrov.pub)"
------------------------
-Modified user "ipetrov"
------------------------
-  User login: ipetrov
-  First name: Ivan
-  Last name: Petrov
-  Home directory: /home/ipetrov
-  Login shell: /bin/bash
-  Principal name: ipetrov@SERGSHA.LOCAL
-  Principal alias: ipetrov@SERGSHA.LOCAL
-  Email address: ipetrov@email.ru
-  UID: 1192400001
-  GID: 1192400001
-  SSH public key: ssh-rsa
-                  AAAAB3NzaC1yc2EAAAADAQABAAACAQDS0vKPmZ67tZ3LxdSbYMQCZr/hsudAnLfq1QXBhPih+ktncbZMSC4mJgoME1YUua+fqEU+zzxSa7+L8Itq43joXfFR784FnlB2+nkkpF5LKuKKg3F4eynAv58I14MleK1gFlnZiiuSPjIQ70/eFkp+L9wOb0sCdH4u/bu4z+MaETJkhKvRX1J1J4N1dJxFHYdLj3/LN+E86GCoU80VZ+prAQCQqmfXAsg5REfaTqubRNDORXvB/4cFCxXJIHlktyDlZMUc90ai1Y5mc7G1QVgxAwSbmL/PhnC5eHzfowHvZqYXltLZ5zj4I7hfeg8pSTALRYzFr28S1coV7A0sexa5xHIfAvvNERXYaf6beYuOJkY/UYRAEwj7eaR+dW1w5n2ASCC1LfaStfDw3GcjgLb95oBcPsgDyuWlFqq0k9OR+B0E93h56Pz9DL/Xk4moohQFCrk8GFXUWMH1QFBxFZtlWJ+cBYIQQQIMIzWJ/v1I/dUHaUaKrSSz0DA2RWqFQfb+L2mMMb5zMPffJMzfFLl0CI2IDm+oGPdBhSwe9lSk12+1z2B/CfJLhHBFx8MqJXCI1Zf/Fs+egj0k8EWWwdHhCA2JgASUsWYkRSUQZrmidXDxLqqa78KZTIS39mIStI8t8AfMkbf772D83vCSTzzb5BpeDza/a5gTpQtvYsTpdQ==
-                  root@ipaserver.sergsha.local
-  SSH public key fingerprint: SHA256:kZ6av6ykcEebO+CcMnocQdZTz3xqQ/uZVnk/ajMj5Cs
-                              root@ipaserver.sergsha.local (ssh-rsa)
-  Account disabled: False
-  Password: True
-  Member of groups: ipausers
-  Kerberos keys available: True
-[root@ipaserver ~]#</pre>
-
-<pre>[root@ipaserver ~]# chown -R ipetrov: /home/ipetrov/
-[root@ipaserver ~]#</pre>
-
-<p>Изменим права доступа к каталогу /home/ipetrov/.ssh и его содержимому:</p>
-
-<pre>[root@ipaserver ~]# chmod 0600 /home/ipetrov/.ssh/ipetrov*
-[root@ipaserver ~]#</pre>
-
-<pre>[root@ipaserver ~]# chmod 0700 /home/ipetrov/.ssh/
-[root@ipaserver ~]#</pre>
-
 <p>Включаем firewalld:</p>
 
 <pre>[root@ipaserver ~]# systemctl enable firewalld --now
@@ -683,7 +617,7 @@ Oct 31 15:47:26 ipaclient.sergsha.local firewalld[24403]: WARNING: AllowZoneD...
 Hint: Some lines were ellipsized, use -l to show in full.
 [root@ipaclient ~]#</pre>
 
-<p>Попрбуем заполучить билет Kerberos для пользователя ipetrov:</p>
+<p>Попробуем заполучить билет Kerberos для пользователя ipetrov:</p>
 
 <pre>[root@ipaclient ~]# kinit ipetrov
 Password for ipetrov@SERGSHA.LOCAL:
@@ -763,19 +697,19 @@ Modified user "ipetrov"
   Kerberos keys available: True
 [root@ipaserver ~]#</pre>
 
-<p>Теперь под пользователем ipetrov с помощью ssh-ключа попытаемся зайти на сервер ipaserver:</p>
+<p>Теперь с клиентского сервера ipaclient под пользователем ipetrov с помощью ssh-ключа попытаемся зайти на сервер ipaserver:</p>
 
 <pre>[ipetrov@ipaclient ~]$ ssh ipetrov@ipaserver.sergsha.local -i ./.ssh/ipetrov
 Last login: Mon Oct 31 15:22:06 2022 from 192.168.50.11
--bash-4.2$</pre>
+[ipetrov@ipaserver ~]$</pre>
 
 <p>Убедимся, что мы подключились к серверу ipaserver и под пользователем ipetrov:</p>
 
-<pre>-bash-4.2$ hostname
+<pre>[ipetrov@ipaserver ~]$ hostname
 ipaserver.sergsha.local
--bash-4.2$ whoami
+[ipetrov@ipaserver ~]$ whoami
 ipetrov
--bash-4.2$</pre>
+[ipetrov@ipaserver ~]$</pre>
 
 
 
