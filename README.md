@@ -27,7 +27,7 @@
 
 <pre>[user@localhost ldap]$ vi ./Vagrantfile</pre>
 
-<p>1. Заполним следующим содержимым:</p>
+<p>Заполним следующим содержимым:</p>
 
 <pre># -*- mode: ruby -*-
 # vi: set ft=ruby :
@@ -35,13 +35,13 @@
 MACHINES = {
   :ipaserver => {
     :box_name => "centos/7",
-	:vm_name => "ipaserver",
+    :vm_name => "ipaserver",
     :ip => '192.168.50.10',
     :mem => '2048'
   },
   :ipaclient => {
     :box_name => "centos/7",
-	:vm_name => "ipaclient",
+    :vm_name => "ipaclient",
     :ip => '192.168.50.11',
     :mem => '1048'
   }
@@ -86,7 +86,9 @@ above with their current state. For more information about a specific
 VM, run `vagrant status NAME`.
 [user@localhost ldap]$</pre>
 
-<p>2. Заходим на ВМ server и зайдём под пользователем root:</p>
+<h4>Создание и настройка сервера FreeIPA</h4>
+
+<p>Заходим на ВМ server и зайдём под пользователем root:</p>
 
 <pre>[user@localhost ldap]$ vagrant ssh ipaserver
 [vagrant@ipaserver ~]$ sudo -i
@@ -292,73 +294,6 @@ These files are required to create replicas. The password for these
 files is the Directory Manager password
 [root@ipaserver ~]#</pre>
 
-<!-- <pre>ipa-server-install -U --realm SERGSHA.LOCAL --domain sergsha.local --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --setup-dns --auto-forwarders --no-reverse --mkhomedir --no-ntp -a Otus1234 -p Otus1234</pre>
-
-<pre>[root@ipaserver ~]# ipa-server-install --realm=SERGSHA.LOCAL --domain=sergsha.local --ds-password=Otus1234 --admin-password=Otus1234 --mkhomedir --hostname=ipaserver.sergsha.local --ip-address=192.168.50.10 --no-ntp --unattended --setup-dns --auto-forwarders --auto-reverse
-Checking DNS domain sergsha.local, please wait ...
-
-The log file for this installation can be found in /var/log/ipaserver-install.log
-==============================================================================
-This program will set up the IPA Server.
-
-This includes:
-  * Configure a stand-alone CA (dogtag) for certificate management
-  * Create and configure an instance of Directory Server
-  * Create and configure a Kerberos Key Distribution Center (KDC)
-  * Configure Apache (httpd)
-  * Configure DNS (bind)
-  * Configure the KDC to enable PKINIT
-
-Excluded by options:
-  * Configure the Network Time Daemon (ntpd)
-
-Warning: skipping DNS resolution of host ipaserver.sergsha.local
-Checking DNS domain sergsha.local., please wait ...
-Checking DNS forwarders, please wait ...
-DNS server 10.0.2.3: answer to query '. SOA' is missing DNSSEC signatures (no RRSIG data)
-Please fix forwarder configuration to enable DNSSEC support.
-(For BIND 9 add directive "dnssec-enable yes;" to "options {}")
-WARNING: DNSSEC validation will be disabled
-Using reverse zone(s) 50.168.192.in-addr.arpa.
-
-The IPA Master Server will be configured with:
-Hostname:       ipaserver.sergsha.local
-IP address(es): 192.168.50.10
-Domain name:    sergsha.local
-Realm name:     SERGSHA.LOCAL
-
-BIND DNS server will be configured to serve IPA domain with:
-Forwarders:       10.0.2.3
-Forward policy:   only
-Reverse zone(s):  50.168.192.in-addr.arpa.
-...
-The ipa-client-install command was successful
-
-==============================================================================
-Setup complete
-
-Next steps:
-	1. You must make sure these network ports are open:
-		TCP Ports:
-		  * 80, 443: HTTP/HTTPS
-		  * 389, 636: LDAP/LDAPS
-		  * 88, 464: kerberos
-		  * 53: bind
-		UDP Ports:
-		  * 88, 464: kerberos
-		  * 53: bind
-
-	2. You can now obtain a kerberos ticket using the command: 'kinit admin'
-	   This ticket will allow you to use the IPA tools (e.g., ipa user-add)
-	   and the web user interface.
-	3. Kerberos requires time synchronization between clients
-	   and servers for correct operation. You should consider enabling ntpd.
-
-Be sure to back up the CA certificates stored in /root/cacert.p12
-These files are required to create replicas. The password for these
-files is the Directory Manager password
-[root@ipaserver ~]#</pre> -->
-
 <p>Попробуем запросить билет Kerberos для пользователя admin непосредственно на самом сервере IPA (вводим пароль администратора, который указывали при конфигурировании FreeIPA):</p>
 
 <pre>[root@ipaserver ~]# kinit admin
@@ -456,6 +391,8 @@ Oct 31 13:00:08 ipaserver.sergsha.local firewalld[9968]: WARNING: AllowZoneDrift
 Oct 31 13:08:49 ipaserver.sergsha.local firewalld[9968]: WARNING: AllowZoneDriftin...
 Hint: Some lines were ellipsized, use -l to show in full.
 [root@ipaserver ~]#</pre>
+
+<h4>Создание и настройка клиентского сервера FreeIPA</h4>
 
 <p>В отдельном окне подключимся по ssh к серверу ipaclient и войдём под пользователем root:</p>
 
@@ -711,5 +648,18 @@ ipaserver.sergsha.local
 ipetrov
 [ipetrov@ipaserver ~]$</pre>
 
+<h4>Запуск стенда "FreeIPA"</h4>
+
+<p>Запустить стенд с помощью следующей команды:</p>
+
+<pre>$ git clone https://github.com/SergSha/ldap.git && cd ./ldap/ && mkdir ~/.ssh 2> /dev/null; ssh-keygen -q -t rsa -b 4096 -f ~/.ssh/ipetrov -N '' && cp ~/.ssh/ipetrov.pub ./ansible/roles/ldap/files/ -f && vagrant up</pre>
+
+<p>После завершения можно войти под пользователем ipetrov с использованием ssh ключа либо на сервер ipaserver:</p>
+
+<pre>$ ssh ipetrov@192.168.50.10 -i ~/.ssh/ipetrov</pre>
+
+<p>либо на клиентский сервер ipaclient:</p>
+
+<pre>$ ssh ipetrov@192.168.50.11 -i ./.ssh/ipetrov</pre>
 
 
